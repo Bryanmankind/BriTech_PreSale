@@ -21,7 +21,6 @@ contract StarterPreSale is Ownable{
     error tokenNotSent();
     error failedToSendMoney();
     error preSaleNotOver();
-    error notTheOwner();
     error invalidDate();
 
     // payment token to contract 
@@ -36,8 +35,6 @@ contract StarterPreSale is Ownable{
     uint256 public amountRaisedUSDC;
     uint256 public amountRaisedEth;
 
-    uint256 public BriTechSupply = 1_000_000_000;
-    uint256 public preSaleSupply = 75_000_000 * 10 ** 18; // BTT presale tokens 
     uint256 public minimumUSDC = 2 * 10** 6; // minimum amount to get to tokens in ustd
     uint256 public minimumEth = 0.000691 ether; // minimum amount to get to tokens in eth
 
@@ -65,6 +62,7 @@ contract StarterPreSale is Ownable{
       
         preSaleStartTime = block.timestamp;
         endpreSale = _endPreSale;
+        BTT.safeIncreaseAllowance(address(this), type(uint256).max);
     }
 
     receive() external payable {
@@ -72,7 +70,7 @@ contract StarterPreSale is Ownable{
     }
 
     function getTokenCost() external view returns (uint256) {
-        return costOfToken;
+        return preSaleCost;
     }
 
     function extendPreSaleTime (uint256 _newDate) public onlyOwner {
@@ -84,13 +82,7 @@ contract StarterPreSale is Ownable{
     
     // change the cost of the token
     function tokenCost (uint256 _price) external checkPrice(_price) onlyOwner {
-        costOfToken = _price;
-        emit PriceUpdated(_price);
-    }
-
-    // Change the cost per USDC
-    function tokenPriceUSDC (uint256 _price) external checkPrice(_price) onlyOwner {
-        tokenPerUSDC = _price;
+        preSaleCost = _price;
         emit PriceUpdated(_price);
     }
 
@@ -184,7 +176,7 @@ contract StarterPreSale is Ownable{
         USDC.safeTransferFrom(msg.sender, address(this), _usdcAmount);
 
 
-        // Transfer PMT tokens to the buyer'    
+        // Transfer BTT tokens to the buyer'    
         BTT.safeTransfer(msg.sender, token);
 
         emit BuyToken(msg.sender, token);
