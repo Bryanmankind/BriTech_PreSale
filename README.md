@@ -1,66 +1,66 @@
-## Foundry
+# BTT Token Presale Contract
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+This Solidity smart contract allows users to participate in a presale event by purchasing **BTT tokens** using **ETH** or **USDC** tokens. The contract is developed using **Solidity** and **Foundry**.
 
-Foundry consists of:
+## Features
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+- **Purchase BTT Tokens:** Users can buy BTT tokens with ETH or USDC during the presale.
+- **Presale Duration:** The contract supports a specific duration for the presale period.
+- **Token Allocation:** A fixed amount of BTT tokens are available for sale.
+- **Multiple Payment Options:** Users can participate using either ETH or USDC.
+- **Fund Withdrawal:** The collected ETH and USDC can be withdrawn by the contract owner.
 
-## Documentation
+## Requirements
 
-https://book.getfoundry.sh/
+- **Solidity Version:** 0.8.x
+- **Foundry Framework**
 
-## Usage
+## Installation
 
-### Build
+1. Clone the repository:
 
-```shell
-$ forge build
-```
+   ```bash
+   git clone https://github.com/Bryanmankind/BriTech_PreSale.git
+   cd BriTech_PreSale
+   ```
 
-### Test
+2. Install dependencies:
 
-```shell
-$ forge test
-```
+   ```bash
+   forge install
+   ```
 
-### Format
+3. Compile the contract:
 
-```shell
-$ forge fmt
-```
+   ```bash
+   forge build
+   ```
 
-### Gas Snapshots
+4. Run the tests:
 
-```shell
-$ forge snapshot
-```
+   ```bash
+   forge test
+   ```
 
-### Anvil
+## How to Use
 
-```shell
-$ anvil
-```
+1. **Buy Tokens with ETH:**
+   Send ETH to the contract address during the presale period to receive BTT tokens. The conversion rate and other details are defined within the contract.
 
-### Deploy
+2. **Buy Tokens with USDC:**
+   Approve the contract to spend your USDC tokens, then call the contract to purchase BTT tokens with USDC.
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
+3. **Withdrawal (Owner only):**
+   The contract owner can withdraw the collected ETH and USDC after the presale period ends.
 
-### Cast
+## Contracts
 
-```shell
-$ cast <subcommand>
-```
+- `briTechPreSale.sol`: Main contract for the BTT token presale, handling purchases, and managing funds.
+  
+## Deployment
 
-### Help
+You can deploy the contract using your preferred Ethereum development environment (e.g., Hardhat, Foundry). Make sure you have the correct ETH and USDC addresses for the chosen network.
 
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+## License
+
+This project is licensed under the MIT License.
