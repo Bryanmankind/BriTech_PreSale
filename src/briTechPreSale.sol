@@ -36,14 +36,11 @@ contract StarterPreSale is Ownable{
     uint256 public amountRaisedEth;
 
     uint256 public minimumUSDC = 2 * 10** 6; // minimum amount to get to tokens in ustd
-    uint256 public minimumEth = 0.000691 ether; // minimum amount to get to tokens in eth
+    uint256 public minimumEth = 0.000691 ether; // minimum amount to get one tokens in eth
 
-    uint256 public costOfToken;
     uint256 public tokenPerUSDC;
     uint256 public preSaleCost =  0.000050059 ether;
-    uint256 public costAfterPresale =  0.000060000 ether;
     uint256 public preSaleCostUSDC =  6000;
-    uint256 public costAfterPresaleUSDC =  1500;
 
 
     modifier checkPrice (uint256 _price) {
@@ -69,10 +66,12 @@ contract StarterPreSale is Ownable{
         buyTokenWithEth ();
     }
 
+    // Get the cost of BTT token
     function getTokenCost() external view returns (uint256) {
         return preSaleCost;
     }
 
+    // Extend the preSale Time 
     function extendPreSaleTime (uint256 _newDate) public onlyOwner {
         if (endpreSale > _newDate){
             revert invalidDate();
@@ -103,10 +102,6 @@ contract StarterPreSale is Ownable{
        BTT.safeTransferFrom(msg.sender, address(this), _tokens);
     }
 
-    function withdrawPMTtoken () public  onlyOwner {
-        uint256 BTTamount = BTT.balanceOf(address(this));
-        BTT.transfer(msg.sender, BTTamount);
-    }
 
     function buyTokenWithEth () public payable returns (bool) {
         buyToken();
@@ -124,14 +119,8 @@ contract StarterPreSale is Ownable{
             revert fundsTooLow();
         }
 
-        if (block.timestamp <= endpreSale) {
-            costOfToken = preSaleCost;
-        }else {
-            costOfToken = costAfterPresale;
-    }
-
         // Calculate the amount of tokens to be purchased
-        uint256 token = msg.value / costOfToken;
+        uint256 token = msg.value / preSaleCost;
 
         // Update contract state variables
         soldTokens += token;
@@ -160,11 +149,11 @@ contract StarterPreSale is Ownable{
             revert fundsTooLow();
         }
 
-        if (block.timestamp <  endpreSale) {
-            tokenPerUSDC = preSaleCostUSDC;
-        }else {
-            tokenPerUSDC = costAfterPresaleUSDC;
-        }
+        // if (block.timestamp <  endpreSale) {
+        //     tokenPerUSDC = preSaleCostUSDC;
+        // }else {
+        //     tokenPerUSDC = costAfterPresaleUSDC;
+        // }
 
         uint256 token = _usdcAmount / tokenPerUSDC;
 
@@ -184,6 +173,8 @@ contract StarterPreSale is Ownable{
         return true;   
     }
 
+
+    // withDraw funds to owners Address.. 
     function withdrawEth() public onlyOwner {
         uint256 balance = address(this).balance;
         amountRaisedEth = 0;
@@ -192,9 +183,16 @@ contract StarterPreSale is Ownable{
             revert failedToSendMoney();
         }
     }
+
     
     function withdrawUSDC() public onlyOwner {
         uint256 amount = USDC.balanceOf(address(this));
         USDC.safeTransfer(msg.sender, amount);
+    }
+
+         // WithdrawBTT Token 
+    function withdrawBTTtoken () public  onlyOwner {
+        uint256 BTTamount = BTT.balanceOf(address(this));
+        BTT.transfer(msg.sender, BTTamount);
     }
 }
