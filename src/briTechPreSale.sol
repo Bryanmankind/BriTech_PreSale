@@ -39,8 +39,7 @@ contract StarterPreSale is Ownable{
     uint256 public minimumEth = 0.000691 ether; // minimum amount to get one tokens in eth
 
     uint256 public tokenPerUSDC;
-    uint256 public preSaleCost =  0.000050059 ether;
-    uint256 public preSaleCostUSDC =  6000;
+    uint256 public preSaleCost;
 
 
     modifier checkPrice (uint256 _price) {
@@ -53,10 +52,11 @@ contract StarterPreSale is Ownable{
     event BuyToken (address indexed user,  uint256 indexed amount);
     event PriceUpdated(uint256 newPrice);
 
-    constructor (address _tokenAddress, address paymentAdd, uint256 _endPreSale) Ownable(msg.sender) {
+    constructor (address _tokenAddress, address paymentAdd, uint256 _endPreSale, uint256 _preSaleCost) Ownable(msg.sender) {
         BTT = IERC20(_tokenAddress);
         USDC = IERC20(paymentAdd);
-      
+
+        preSaleCost = _preSaleCost;
         preSaleStartTime = block.timestamp;
         endpreSale = _endPreSale;
         BTT.safeIncreaseAllowance(address(this), type(uint256).max);
@@ -149,12 +149,6 @@ contract StarterPreSale is Ownable{
             revert fundsTooLow();
         }
 
-        // if (block.timestamp <  endpreSale) {
-        //     tokenPerUSDC = preSaleCostUSDC;
-        // }else {
-        //     tokenPerUSDC = costAfterPresaleUSDC;
-        // }
-
         uint256 token = _usdcAmount / tokenPerUSDC;
 
         // Update contract state variables
@@ -194,5 +188,9 @@ contract StarterPreSale is Ownable{
     function withdrawBTTtoken () public  onlyOwner {
         uint256 BTTamount = BTT.balanceOf(address(this));
         BTT.transfer(msg.sender, BTTamount);
+    }
+
+    function transferOwnership (address newOwner) public override onlyOwner{
+        super.transferOwnership(newOwner);
     }
 }
