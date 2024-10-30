@@ -5,9 +5,13 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 
 
-contract StarterPreSale is Ownable{
+
+contract StarterPreSale is Ownable {
+
+    AggregatorV3Interface internal priceFeed;
 
     using SafeERC20 for IERC20;
 
@@ -22,6 +26,7 @@ contract StarterPreSale is Ownable{
     error failedToSendMoney();
     error preSaleNotOver();
     error invalidDate();
+    error stalePrice();
 
     // payment token to contract 
     IERC20 public USDC;
@@ -35,12 +40,9 @@ contract StarterPreSale is Ownable{
     uint256 public amountRaisedUSDC;
     uint256 public amountRaisedEth;
 
-    uint256 public minimumUSDC = 2 * 10** 6; // minimum amount to get to tokens in ustd
     uint256 public minimumEth = 0.000691 ether; // minimum amount to get one tokens in eth
 
-    uint256 public tokenPerUSDC;
     uint256 public preSaleCost;
-
 
     modifier checkPrice (uint256 _price) {
         if (_price == 0) {
@@ -55,11 +57,13 @@ contract StarterPreSale is Ownable{
     constructor (address _tokenAddress, address paymentAdd, uint256 _endPreSale, uint256 _preSaleCost) Ownable(msg.sender) {
         BTT = IERC20(_tokenAddress);
         USDC = IERC20(paymentAdd);
-
+ 
         preSaleCost = _preSaleCost;
         preSaleStartTime = block.timestamp;
         endpreSale = _endPreSale;
         BTT.safeIncreaseAllowance(address(this), type(uint256).max);
+
+      priceFeed = AggregatorV3Interface(0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6); 
     }
 
     receive() external payable {
@@ -82,12 +86,6 @@ contract StarterPreSale is Ownable{
     // change the cost of the token
     function tokenCost (uint256 _price) external checkPrice(_price) onlyOwner {
         preSaleCost = _price;
-        emit PriceUpdated(_price);
-    }
-
-    // Change the minimum dollar 
-    function tokenPriceminimumUSDC (uint256 _price) external checkPrice(_price) onlyOwner {
-        minimumUSDC = _price;
         emit PriceUpdated(_price);
     }
 
@@ -139,17 +137,38 @@ contract StarterPreSale is Ownable{
         return true;
     }
 
+    function priceValue () internal view  returns (int) {
+        (, int USDCprice, , uint256 updatedAt,) =  priceFeed.latestRoundData();
+
+         if (USDCprice <= 0) {
+             revert invalidPrice();
+            }
+
+     if (updatedAt < block.timestamp - 60 * 60) {
+            revert stalePrice();
+
+        }
+
+        return USDCprice;
+    }
+
     function buyWithUSDC (uint256 _usdcAmount) internal  returns (bool) {
 
         if (block.timestamp > endpreSale) {
         revert preSaleIsOver();
         }
 
-        if (_usdcAmount < minimumUSDC) {
+        int price = priceValue();
+
+        uint256 ethEquivalent =  (_usdcAmount * 1e18) / uint256(price);
+        
+
+
+        if (ethEquivalent < minimumEth) {
             revert fundsTooLow();
         }
 
-        uint256 token = _usdcAmount / tokenPerUSDC;
+        uint256 token = ethEquivalent / preSaleCost;
 
         // Update contract state variables
         soldTokens += token;   
