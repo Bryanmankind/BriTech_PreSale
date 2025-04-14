@@ -7,8 +7,6 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 
-
-
 contract StarterPreSale is Ownable {
 
     AggregatorV3Interface internal priceFeed;
@@ -37,7 +35,7 @@ contract StarterPreSale is Ownable {
     uint256 public preSaleStartTime;
     uint256 public endpreSale;
     uint256 public soldTokens;
-    uint256 public amountRaisedUSDC;
+    uint256 public USDCamountRaised;
     uint256 public amountRaisedEth;
 
     uint256 public minimumEth = 0.000691 ether; // minimum amount to get one tokens in eth
@@ -51,7 +49,7 @@ contract StarterPreSale is Ownable {
         _;
     }
     
-    event BuyToken (address indexed user,  uint256 indexed amount);
+    event BuyToken (address indexed user,  uint256 amount);
     event PriceUpdated(uint256 newPrice);
 
     constructor (address _tokenAddress, address paymentAdd, uint256 _endPreSale, uint256 _preSaleCost) Ownable(msg.sender) {
@@ -80,19 +78,23 @@ contract StarterPreSale is Ownable {
         if (endpreSale > _newDate){
             revert invalidDate();
         }
-        endpreSale = block.timestamp + _newDate;
+
+        if (endpreSale == _newDate) {
+            revert invalidDate();
+        }
+        endpreSale = _newDate;
     }
     
-    // change the cost of the token
-    function tokenCost (uint256 _price) external checkPrice(_price) onlyOwner {
+    // change the cost of the token~~
+    function setTokenCost (uint256 _price) external checkPrice(_price) onlyOwner {
         preSaleCost = _price;
-        emit PriceUpdated(_price);
+        emit PriceUpdated(preSaleCost);
     }
 
     // Change the minimum Eth 
     function tokenPriceminimumEth (uint256 _price) external checkPrice(_price) onlyOwner {
         minimumEth = _price;
-        emit PriceUpdated(_price);
+        emit PriceUpdated(minimumEth);
     }
 
     // function deposit BTT to contract
@@ -172,7 +174,7 @@ contract StarterPreSale is Ownable {
 
         // Update contract state variables
         soldTokens += token;   
-        amountRaisedUSDC += _usdcAmount;
+        USDCamountRaised += _usdcAmount;
     
          // transfer USDC tokens from the sender to the contract
         USDC.safeTransferFrom(msg.sender, address(this), _usdcAmount);
@@ -196,7 +198,6 @@ contract StarterPreSale is Ownable {
             revert failedToSendMoney();
         }
     }
-
     
     function withdrawUSDC() public onlyOwner {
         uint256 amount = USDC.balanceOf(address(this));
