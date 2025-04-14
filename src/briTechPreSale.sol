@@ -162,7 +162,7 @@ contract StarterPreSale is Ownable {
 
         int price = priceValue();
 
-        uint256 ethEquivalent =  (_usdcAmount * 1e18) / uint256(price);
+        uint256 ethEquivalent =  (_usdcAmount * 1e12) / uint256(price);
         
 
 
