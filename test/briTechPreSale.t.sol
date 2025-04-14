@@ -37,6 +37,8 @@ contract StarterPreSaleTest is Test {
         console.log("Contract Deployed:", address(starterPreSale));
         console.log("owner balance:",  contractToken.balanceOf(address(owner)));
         console.log("Contract balance:",  contractToken.balanceOf(address(starterPreSale)));
+        console.log("User1 USDC balance:", paymentToken.balanceOf(user1));
+
     }
 
     function test_SetNewDate () public {
@@ -77,11 +79,11 @@ contract StarterPreSaleTest is Test {
     function test_buyTokenWithUssdc () public {
         vm.startPrank(user1);
         
-        console.log("contract balance before...", starterPreSale.USDCamountRaised());
+        console.log("contract balance of usdc before...", starterPreSale.USDCamountRaised());
 
-        starterPreSale.buyTokenWithUSDC(5);
+        starterPreSale.buyTokenWithUSDC(50);
 
-        console.log("contract balance after...", starterPreSale.USDCamountRaised());
+        console.log("contract balance of usdc after...", starterPreSale.USDCamountRaised());
 
         vm.stopPrank();
 

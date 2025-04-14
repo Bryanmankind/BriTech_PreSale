@@ -61,7 +61,7 @@ contract StarterPreSale is Ownable {
         endpreSale = _endPreSale;
         BTT.safeIncreaseAllowance(address(this), type(uint256).max);
 
-      priceFeed = AggregatorV3Interface(0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6); 
+        priceFeed = AggregatorV3Interface(0x986b5E1e1755e3C2440e960477f25201B0a8bbD4); // this should not be hardcoded for USDC/ETH
     }
 
     receive() external payable {
@@ -140,18 +140,18 @@ contract StarterPreSale is Ownable {
     }
 
     function priceValue () internal view  returns (int) {
-        (, int USDCprice, , uint256 updatedAt,) =  priceFeed.latestRoundData();
+        ( , int USDCFeedPrice, , uint256 updatedAt,) =  priceFeed.latestRoundData();
 
-         if (USDCprice <= 0) {
+         if (USDCFeedPrice == 0) {
              revert invalidPrice();
             }
 
-     if (updatedAt < block.timestamp - 60 * 60) {
+        if (updatedAt < block.timestamp - 60 * 60) {
             revert stalePrice();
 
         }
 
-        return USDCprice;
+        return USDCFeedPrice * 1e10;
     }
 
     function buyWithUSDC (uint256 _usdcAmount) internal  returns (bool) {
