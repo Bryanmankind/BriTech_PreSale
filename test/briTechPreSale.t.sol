@@ -4,6 +4,7 @@ pragma solidity 0.8.24;
 import {Test, console} from "forge-std/Test.sol";
 import {StarterPreSale} from "src/briTechPreSale.sol";
 import {IERC20Mock} from "test/mock_contract/IERC20Mock.sol";
+import {MockAggregator} from "test/mock_contract/chainlinkMock.sol";
 
 contract StarterPreSaleTest is Test {
     StarterPreSale public starterPreSale;
@@ -11,16 +12,18 @@ contract StarterPreSaleTest is Test {
     address user1 = makeAddr("user1");
     address user2 = makeAddr("user2");
 
-    uint256 amount = 20*10^6;
+    uint256 amount = 10 * 10**6;
     IERC20Mock paymentToken;
     IERC20Mock contractToken;
+    MockAggregator mock;
     
     uint256 endPreSale;
     uint256 preSaleCost;
 
     function setUp () public {
         paymentToken = new IERC20Mock("USDC coin", "USDC", 6, 1_000_000);
-        contractToken = new IERC20Mock("BriTech coin", "BTT", 18, 1_000_000);
+        contractToken = new IERC20Mock("BriTech coin", "BTT", 18, 5_000_000);
+        mock = new MockAggregator(10_000_000_000, block.timestamp);
 
        preSaleCost = 0.0025 ether;
 
@@ -30,11 +33,11 @@ contract StarterPreSaleTest is Test {
         endPreSale = block.timestamp + 20 days;
 
         vm.prank(owner);
-        starterPreSale = new StarterPreSale( address(contractToken), address(paymentToken), endPreSale, preSaleCost);
+        starterPreSale = new StarterPreSale( address(contractToken), address(paymentToken), endPreSale, preSaleCost, address(mock));
         
-        contractToken.transfer(address(starterPreSale), 500_000);
+        contractToken.transfer(address(starterPreSale), 4_000_000);
 
-        console.log("Contract Deployed:", address(starterPreSale));
+        console.log("Contract Deployed:", address(starterPreSale)); 
         console.log("owner balance:",  contractToken.balanceOf(address(owner)));
         console.log("Contract balance:",  contractToken.balanceOf(address(starterPreSale)));
         console.log("User1 USDC balance:", paymentToken.balanceOf(user1));
@@ -81,13 +84,15 @@ contract StarterPreSaleTest is Test {
         
         console.log("contract balance of usdc before...", starterPreSale.USDCamountRaised());
 
-        starterPreSale.buyTokenWithUSDC(50);
+        paymentToken.approve(address(starterPreSale), 7*10**6);
+
+        starterPreSale.buyTokenWithUSDC(7*10**6);
 
         console.log("contract balance of usdc after...", starterPreSale.USDCamountRaised());
 
         vm.stopPrank();
 
-        vm.assertEq(starterPreSale.USDCamountRaised(), 5);
+        vm.assertEq(starterPreSale.USDCamountRaised(), 7*10**6);
     }
 
     function test_WithdrawEth () public {

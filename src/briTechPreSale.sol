@@ -25,6 +25,7 @@ contract StarterPreSale is Ownable {
     error preSaleNotOver();
     error invalidDate();
     error stalePrice();
+    error OverflowDetected();
 
     // payment token to contract 
     IERC20 public USDC;
@@ -52,7 +53,7 @@ contract StarterPreSale is Ownable {
     event BuyToken (address indexed user,  uint256 amount);
     event PriceUpdated(uint256 newPrice);
 
-    constructor (address _tokenAddress, address paymentAdd, uint256 _endPreSale, uint256 _preSaleCost) Ownable(msg.sender) {
+    constructor (address _tokenAddress, address paymentAdd, uint256 _endPreSale, uint256 _preSaleCost, address _priceFeed) Ownable(msg.sender) {
         BTT = IERC20(_tokenAddress);
         USDC = IERC20(paymentAdd);
  
@@ -61,7 +62,7 @@ contract StarterPreSale is Ownable {
         endpreSale = _endPreSale;
         BTT.safeIncreaseAllowance(address(this), type(uint256).max);
 
-        priceFeed = AggregatorV3Interface(0x986b5E1e1755e3C2440e960477f25201B0a8bbD4); // this should not be hardcoded for USDC/ETH
+        priceFeed = AggregatorV3Interface(_priceFeed); // this should not be hardcoded for USDC/ETH
     }
 
     receive() external payable {
@@ -139,8 +140,8 @@ contract StarterPreSale is Ownable {
         return true;
     }
 
-    function priceValue () internal view  returns (int) {
-        ( , int USDCFeedPrice, , uint256 updatedAt,) =  priceFeed.latestRoundData();
+    function priceValue () internal view  returns (uint256) {
+        ( , int256 USDCFeedPrice, , uint256 updatedAt,) =  priceFeed.latestRoundData();
 
          if (USDCFeedPrice == 0) {
              revert invalidPrice();
@@ -148,21 +149,20 @@ contract StarterPreSale is Ownable {
 
         if (updatedAt < block.timestamp - 60 * 60) {
             revert stalePrice();
-
         }
 
-        return USDCFeedPrice * 1e10;
+        return uint256(USDCFeedPrice) * 1e10;
     }
 
     function buyWithUSDC (uint256 _usdcAmount) internal  returns (bool) {
 
         if (block.timestamp > endpreSale) {
-        revert preSaleIsOver();
+             revert preSaleIsOver();
         }
 
-        int price = priceValue();
+        uint256 price = priceValue();
 
-        uint256 ethEquivalent =  (_usdcAmount * 1e12) / uint256(price);
+        uint256 ethEquivalent =  (_usdcAmount * 1e18) / price;
         
 
 
@@ -171,6 +171,7 @@ contract StarterPreSale is Ownable {
         }
 
         uint256 token = ethEquivalent / preSaleCost;
+
 
         // Update contract state variables
         soldTokens += token;   
