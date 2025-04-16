@@ -107,8 +107,7 @@ contract StarterPreSale is Ownable {
     require(BTT.transferFrom(msg.sender, address(this), _tokens), "Transfer failed");
 
     preSaleTokenSupply += _tokens;
-}
-
+    }
 
 
     function buyTokenWithEth () public payable returns (bool) {

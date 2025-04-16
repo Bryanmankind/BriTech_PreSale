@@ -48,13 +48,16 @@ contract StarterPreSaleTest is Test {
 
     }
 
+    function test_getTokenCost () public view {        
+        console.log("Here is the presale cost:", starterPreSale.getTokenCost());
+    }
+
     function test_SetNewDate () public {
         vm.startPrank(owner);
         console.log("old date:.....", starterPreSale.endpreSale());
         starterPreSale.extendPreSaleTime(30 days);
         console.log("New date:.....", starterPreSale.endpreSale());
         vm.stopPrank();
-        
     }
 
     function test_SetNewDateWithInvalidAddress () public {
@@ -72,16 +75,24 @@ contract StarterPreSaleTest is Test {
     function test_buyTokenWithEth () public {
         
         vm.deal(user1, 2 ether);
-        console.log("contract balance before...", starterPreSale.amountRaisedEth());
+        console.log("contract eth balance before...", starterPreSale.amountRaisedEth());
 
         vm.startPrank(user1);
         starterPreSale.buyTokenWithEth{value: 0.2 ether}();
 
-        console.log("contract balance after...", starterPreSale.amountRaisedEth());
+        console.log("contract eth balance after...", starterPreSale.amountRaisedEth());
 
         vm.stopPrank();
 
         vm.assertEq(starterPreSale.amountRaisedEth(), 0.2 ether );
+    }
+
+    function test_endOfPreSale () public {
+        vm.startPrank(user1);
+        vm.warp(40 days);
+        vm.expectRevert();
+        starterPreSale.buyTokenWithEth{value: 0.2 ether}();
+        vm.stopPrank();
     }
 
     function test_buyTokenWithUssdc () public {
