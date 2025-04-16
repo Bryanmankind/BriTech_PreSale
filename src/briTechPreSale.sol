@@ -26,6 +26,7 @@ contract StarterPreSale is Ownable {
     error invalidDate();
     error stalePrice();
     error OverflowDetected();
+    error insurficientTokens();
 
     // payment token to contract 
     IERC20 public USDC;
@@ -38,6 +39,8 @@ contract StarterPreSale is Ownable {
     uint256 public soldTokens;
     uint256 public USDCamountRaised;
     uint256 public amountRaisedEth;
+
+    uint256 public preSaleTokenSupply;
 
     uint256 public minimumEth = 0.000691 ether; // minimum amount to get one tokens in eth
 
@@ -101,6 +104,8 @@ contract StarterPreSale is Ownable {
     // function deposit BTT to contract
     function depositBTT (uint256 _tokens) external onlyOwner {
        BTT.safeTransferFrom(msg.sender, address(this), _tokens);
+
+       preSaleTokenSupply += _tokens;
     }
 
 
@@ -122,6 +127,10 @@ contract StarterPreSale is Ownable {
 
         // Calculate the amount of tokens to be purchased
         uint256 token = msg.value / preSaleCost;
+
+        if (preSaleTokenSupply < soldTokens + token) {
+            revert insufficientTokens()
+        }
 
         // Update contract state variables
         soldTokens += token;
