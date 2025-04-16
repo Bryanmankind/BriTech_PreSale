@@ -15,13 +15,14 @@ contract IERC20Mock {
         string memory _name,
         string memory _symbol,
         uint8 _decimals,
-        uint256 _initialSupply
+        uint256 _initialSupply,
+        address receiver
     ) {
         name = _name;
         symbol = _symbol;
         decimals = _decimals;
         totalSupply = _initialSupply * (10**_decimals);
-        balances[msg.sender] = totalSupply;
+        balances[receiver] = totalSupply;
     }
 
     function balanceOf(address account) public view returns (uint256) {

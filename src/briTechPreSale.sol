@@ -63,9 +63,10 @@ contract StarterPreSale is Ownable {
         preSaleCost = _preSaleCost;
         preSaleStartTime = block.timestamp;
         endpreSale = _endPreSale;
-        BTT.safeIncreaseAllowance(address(this), type(uint256).max);
 
-        priceFeed = AggregatorV3Interface(_priceFeed); // this should not be hardcoded for USDC/ETH
+        BTT.approve(address(this), type(uint256).max);
+
+        priceFeed = AggregatorV3Interface(_priceFeed);
     }
 
     receive() external payable {
@@ -102,11 +103,12 @@ contract StarterPreSale is Ownable {
     }
 
     // function deposit BTT to contract
-    function depositBTT (uint256 _tokens) external onlyOwner {
-       BTT.safeTransferFrom(msg.sender, address(this), _tokens);
+    function depositBTT(uint256 _tokens) external onlyOwner {
+    require(BTT.transferFrom(msg.sender, address(this), _tokens), "Transfer failed");
 
-       preSaleTokenSupply += _tokens;
-    }
+    preSaleTokenSupply += _tokens;
+}
+
 
 
     function buyTokenWithEth () public payable returns (bool) {
@@ -129,7 +131,7 @@ contract StarterPreSale is Ownable {
         uint256 token = msg.value / preSaleCost;
 
         if (preSaleTokenSupply < soldTokens + token) {
-            revert insufficientTokens()
+            revert insurficientTokens();
         }
 
         // Update contract state variables
@@ -180,6 +182,10 @@ contract StarterPreSale is Ownable {
         }
 
         uint256 token = ethEquivalent / preSaleCost;
+
+        if (preSaleTokenSupply < soldTokens + token) {
+            revert insurficientTokens();
+        }
 
 
         // Update contract state variables

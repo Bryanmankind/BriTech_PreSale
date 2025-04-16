@@ -21,21 +21,25 @@ contract StarterPreSaleTest is Test {
     uint256 preSaleCost;
 
     function setUp () public {
-        paymentToken = new IERC20Mock("USDC coin", "USDC", 6, 1_000_000);
-        contractToken = new IERC20Mock("BriTech coin", "BTT", 18, 5_000_000);
+        paymentToken = new IERC20Mock("USDC coin", "USDC", 6, 1_000_000, owner);
+        contractToken = new IERC20Mock("BriTech coin", "BTT", 18, 5_000_000, owner);
         mock = new MockAggregator(10_000_000_000, block.timestamp);
 
        preSaleCost = 0.0025 ether;
 
-        contractToken.transfer(user1, amount);
-        paymentToken.transfer(user1, amount);
-
         endPreSale = block.timestamp + 20 days;
 
-        vm.prank(owner);
+        console.log("Owner BTT balance before approve:", contractToken.balanceOf(owner));
+
+
+        vm.startPrank(owner);
         starterPreSale = new StarterPreSale( address(contractToken), address(paymentToken), endPreSale, preSaleCost, address(mock));
         
-        contractToken.transfer(address(starterPreSale), 4_000_000);
+        contractToken.approve(address(starterPreSale), 100_000 * 1e18);
+
+        starterPreSale.depositBTT(100_000 * 1e18);
+
+        vm.stopPrank();
 
         console.log("Contract Deployed:", address(starterPreSale)); 
         console.log("owner balance:",  contractToken.balanceOf(address(owner)));
@@ -66,17 +70,18 @@ contract StarterPreSaleTest is Test {
     }
 
     function test_buyTokenWithEth () public {
+        
         vm.deal(user1, 2 ether);
         console.log("contract balance before...", starterPreSale.amountRaisedEth());
 
         vm.startPrank(user1);
-        starterPreSale.buyTokenWithEth{value: 1 ether}();
+        starterPreSale.buyTokenWithEth{value: 0.2 ether}();
 
         console.log("contract balance after...", starterPreSale.amountRaisedEth());
 
         vm.stopPrank();
 
-        vm.assertEq(starterPreSale.amountRaisedEth(), 1 ether );
+        vm.assertEq(starterPreSale.amountRaisedEth(), 0.2 ether );
     }
 
     function test_buyTokenWithUssdc () public {
