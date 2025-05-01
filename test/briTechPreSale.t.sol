@@ -21,11 +21,11 @@ contract StarterPreSaleTest is Test {
     uint256 preSaleCost;
 
     function setUp () public {
-        paymentToken = new IERC20Mock("USDC coin", "USDC", 6, 1_000_000, owner);
+        paymentToken = new IERC20Mock("USDC coin", "USDC", 6, 1_000_000, user1);
         contractToken = new IERC20Mock("BriTech coin", "BTT", 18, 5_000_000, owner);
-        mock = new MockAggregator(10_000_000_000, block.timestamp);
+        mock = new MockAggregator(100, block.timestamp);
 
-       preSaleCost = 0.0025 ether;
+       preSaleCost = 0.00025 ether;
 
         endPreSale = block.timestamp + 20 days;
 
@@ -76,16 +76,20 @@ contract StarterPreSaleTest is Test {
         
         vm.deal(user1, 2 ether);
         console.log("contract eth balance before...", starterPreSale.amountRaisedEth());
+        console.log("user Btt balance before...", contractToken.balanceOf(user1));
 
         vm.startPrank(user1);
         starterPreSale.buyTokenWithEth{value: 0.2 ether}();
 
         console.log("contract eth balance after...", starterPreSale.amountRaisedEth());
+        console.log("user Btt balance after...", contractToken.balanceOf(user1));
 
         vm.stopPrank();
 
-        vm.assertEq(starterPreSale.amountRaisedEth(), 0.2 ether );
+        vm.assertEq(starterPreSale.amountRaisedEth(), 0.2 ether);
     }
+
+    
 
     function test_endOfPreSale () public {
         vm.startPrank(user1);
@@ -95,20 +99,21 @@ contract StarterPreSaleTest is Test {
         vm.stopPrank();
     }
 
+
     function test_buyTokenWithUssdc () public {
         vm.startPrank(user1);
         
         console.log("contract balance of usdc before...", starterPreSale.USDCamountRaised());
 
-        paymentToken.approve(address(starterPreSale), 7*10**6);
+        paymentToken.approve(address(starterPreSale), 30*10**6);
 
-        starterPreSale.buyTokenWithUSDC(7*10**6);
+        starterPreSale.buyTokenWithUSDC(30*10**6);
 
         console.log("contract balance of usdc after...", starterPreSale.USDCamountRaised());
 
         vm.stopPrank();
 
-        vm.assertEq(starterPreSale.USDCamountRaised(), 7*10**6);
+        vm.assertEq(starterPreSale.USDCamountRaised(), 30*10**6);
     }
 
     function test_WithdrawEth () public {

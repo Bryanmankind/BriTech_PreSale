@@ -14,6 +14,7 @@ contract StarterPreSale is Ownable {
     using SafeERC20 for IERC20;
 
     // Error handeling
+    error invalidAmount();
     error invalidAccount();
     error invalidPrice();
     error fundsTooLow();
@@ -106,7 +107,7 @@ contract StarterPreSale is Ownable {
     function depositBTT(uint256 _tokens) external onlyOwner {
     require(BTT.transferFrom(msg.sender, address(this), _tokens), "Transfer failed");
 
-    preSaleTokenSupply += _tokens;
+        preSaleTokenSupply += _tokens;
     }
 
 
@@ -150,7 +151,7 @@ contract StarterPreSale is Ownable {
         return true;
     }
 
-    function priceValue () internal view  returns (uint256) {
+    function _priceValue () internal view  returns (uint256) {
         ( , int256 USDCFeedPrice, , uint256 updatedAt,) =  priceFeed.latestRoundData();
 
          if (USDCFeedPrice == 0) {
@@ -164,19 +165,40 @@ contract StarterPreSale is Ownable {
         return uint256(USDCFeedPrice) * 1e10;
     }
 
+    function _ethEquivalent(uint256 _usdcAmount) internal view returns  (uint256) {
+
+       uint256 price =  _priceValue();
+
+       if (price == 0) {
+            revert invalidPrice();
+       }
+
+         uint256 ethEquivalent;
+         
+        unchecked {
+            ethEquivalent = (_usdcAmount * 1e18) / price;
+        }
+
+        return ethEquivalent;
+        
+    }
+
     function buyWithUSDC (uint256 _usdcAmount) internal  returns (bool) {
+        if (USDC.allowance(msg.sender, address(this)) < _usdcAmount) {
+            revert invalidAmount();
+        }
 
         if (block.timestamp > endpreSale) {
              revert preSaleIsOver();
         }
 
-        uint256 price = priceValue();
+        if (preSaleCost == 0) {
+            revert invalidPrice();
+        }
 
-        uint256 ethEquivalent =  (_usdcAmount * 1e18) / price;
-        
+       uint256 ethEquivalent = _ethEquivalent(_usdcAmount);
 
-
-        if (ethEquivalent < minimumEth) {
+        if (ethEquivalent <= minimumEth) {
             revert fundsTooLow();
         }
 
@@ -185,7 +207,6 @@ contract StarterPreSale is Ownable {
         if (preSaleTokenSupply < soldTokens + token) {
             revert insurficientTokens();
         }
-
 
         // Update contract state variables
         soldTokens += token;   
