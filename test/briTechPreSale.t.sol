@@ -23,13 +23,14 @@ contract StarterPreSaleTest is Test {
     function setUp () public {
         paymentToken = new IERC20Mock("USDC coin", "USDC", 6, 1_000_000, user1);
         contractToken = new IERC20Mock("BriTech coin", "BTT", 18, 5_000_000, owner);
-        mock = new MockAggregator(100, block.timestamp);
+        mock = new MockAggregator(3_000_000_000, block.timestamp);
 
        preSaleCost = 0.00025 ether;
 
-        endPreSale = block.timestamp + 20 days;
+        endPreSale = block.timestamp + 10 days;
 
         console.log("Owner BTT balance before approve:", contractToken.balanceOf(owner));
+
 
 
         vm.startPrank(owner);
@@ -55,7 +56,7 @@ contract StarterPreSaleTest is Test {
     function test_SetNewDate () public {
         vm.startPrank(owner);
         console.log("old date:.....", starterPreSale.endpreSale());
-        starterPreSale.extendPreSaleTime(30 days);
+        starterPreSale.extendPreSaleTime(starterPreSale.endpreSale() + 30 days);
         console.log("New date:.....", starterPreSale.endpreSale());
         vm.stopPrank();
     }
@@ -105,15 +106,15 @@ contract StarterPreSaleTest is Test {
         
         console.log("contract balance of usdc before...", starterPreSale.USDCamountRaised());
 
-        paymentToken.approve(address(starterPreSale), 30*10**6);
+        paymentToken.approve(address(starterPreSale), 100*10**6);
 
-        starterPreSale.buyTokenWithUSDC(30*10**6);
+        starterPreSale.buyTokenWithUSDC(100*10**6);
 
         console.log("contract balance of usdc after...", starterPreSale.USDCamountRaised());
 
         vm.stopPrank();
 
-        vm.assertEq(starterPreSale.USDCamountRaised(), 30*10**6);
+        vm.assertEq(starterPreSale.USDCamountRaised(), 100*10**6);
     }
 
     function test_WithdrawEth () public {

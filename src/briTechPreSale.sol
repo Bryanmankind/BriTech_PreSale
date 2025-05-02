@@ -174,7 +174,7 @@ contract StarterPreSale is Ownable {
        }
 
          uint256 ethEquivalent;
-         
+
         unchecked {
             ethEquivalent = (_usdcAmount * 1e18) / price;
         }
