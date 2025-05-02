@@ -151,19 +151,28 @@ contract StarterPreSale is Ownable {
         return true;
     }
 
-    function _priceValue () internal view  returns (uint256) {
-        ( , int256 USDCFeedPrice, , uint256 updatedAt,) =  priceFeed.latestRoundData();
-
-         if (USDCFeedPrice == 0) {
-             revert invalidPrice();
-            }
-
-        if (updatedAt < block.timestamp - 60 * 60) {
-            revert stalePrice();
-        }
-
-        return uint256(USDCFeedPrice) * 1e10;
+    function getPriceValue () public view returns (uint256) {
+        return _priceValue();
     }
+
+   function _priceValue () internal view returns (uint256) {
+    ( , int256 USDCFeedPrice, , uint256 updatedAt,) = priceFeed.latestRoundData();
+
+    if (USDCFeedPrice <= 0) {
+        revert invalidPrice();
+    }
+
+    // Check if the price is stale. If the price was updated more than 30 minutes ago, it's stale.
+    if (updatedAt < block.timestamp - 30 minutes) {
+        revert stalePrice();
+    }
+
+    unchecked {
+        uint256 price = uint256(USDCFeedPrice); 
+        return price / 1e8;
+    }
+}
+
 
     function _ethEquivalent(uint256 _usdcAmount) internal view returns  (uint256) {
 
@@ -190,10 +199,6 @@ contract StarterPreSale is Ownable {
 
         if (block.timestamp > endpreSale) {
              revert preSaleIsOver();
-        }
-
-        if (preSaleCost == 0) {
-            revert invalidPrice();
         }
 
        uint256 ethEquivalent = _ethEquivalent(_usdcAmount);
