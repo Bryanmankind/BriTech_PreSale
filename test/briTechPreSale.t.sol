@@ -111,15 +111,15 @@ contract StarterPreSaleTest is Test {
         console.log("contract balance of usdc before...", starterPreSale.USDCamountRaised());
         console.log("contract balance of usdc before...", starterPreSale.USDCamountRaised());
 
-        paymentToken.approve(address(starterPreSale), 1_000_000*10**6);
+        paymentToken.approve(address(starterPreSale), 500*10**6);
 
-        starterPreSale.buyTokenWithUSDC(1_000_000*10**6);
+        starterPreSale.buyTokenWithUSDC(500*10**6);
 
         console.log("contract balance of usdc after...", starterPreSale.USDCamountRaised());
 
         vm.stopPrank();
 
-        vm.assertEq(starterPreSale.USDCamountRaised(), 1_000_000*10**6);
+        vm.assertEq(starterPreSale.USDCamountRaised(), 500*10**6);
     }
 
     function test_WithdrawEth () public {
