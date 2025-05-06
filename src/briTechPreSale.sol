@@ -2,12 +2,12 @@
 pragma solidity 0.8.24;
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 
-contract StarterPreSale is Ownable {
+contract BriTechLabsPreSale is Ownable {
 
     AggregatorV3Interface internal priceFeed;
 
@@ -54,8 +54,13 @@ contract StarterPreSale is Ownable {
         _;
     }
     
-    event BuyToken (address indexed user,  uint256 amount);
+    event BttTokenBought (address indexed user,  uint256 amount);
     event PriceUpdated(uint256 newPrice);
+    event preSaleEndTimeExtended (uint256 newDate);
+    event bttTokenDeposited (uint256 amount);
+    event EthWithdrawn(address indexed owner, uint256 amount);
+    event UsdcWithdrawn(address indexed owner, uint256 amount);
+
 
     constructor (address _tokenAddress, address paymentAdd, uint256 _endPreSale, uint256 _preSaleCost, address _priceFeed) Ownable(msg.sender) {
         BTT = IERC20(_tokenAddress);
@@ -89,6 +94,8 @@ contract StarterPreSale is Ownable {
             revert invalidDate();
         }
         endpreSale = _newDate;
+
+        emit preSaleEndTimeExtended(_newDate);
     }
     
     // change the cost of the token~~
@@ -108,6 +115,8 @@ contract StarterPreSale is Ownable {
     require(BTT.transferFrom(msg.sender, address(this), _tokens), "Transfer failed");
 
         preSaleTokenSupply += _tokens;
+
+        emit bttTokenDeposited (_tokens);
     }
 
 
@@ -138,10 +147,10 @@ contract StarterPreSale is Ownable {
         soldTokens += token;
         amountRaisedEth += msg.value;
 
-        // Transfer PMT tokens to the buyer's address
+        // Transfer BTT tokens to the buyer's address
         BTT.safeTransfer(msg.sender, token);
 
-        emit BuyToken(msg.sender, token);
+        emit BttTokenBought (msg.sender, token);
         
         return true;
     }
@@ -162,7 +171,6 @@ contract StarterPreSale is Ownable {
         revert invalidPrice();
     }
 
-    // Check if the price is stale. If the price was updated more than 30 minutes ago, it's stale.
     if (updatedAt < block.timestamp - 30 minutes) {
         revert stalePrice();
     }
@@ -189,7 +197,6 @@ contract StarterPreSale is Ownable {
         }
 
         return ethEquivalent;
-        
     }
 
     function buyWithUSDC (uint256 _usdcAmount) internal  returns (bool) {
@@ -224,7 +231,7 @@ contract StarterPreSale is Ownable {
         // Transfer BTT tokens to the buyer'    
         BTT.safeTransfer(msg.sender, token);
 
-        emit BuyToken(msg.sender, token);
+        emit BttTokenBought(msg.sender, token);
     
         return true;   
     }
@@ -238,11 +245,16 @@ contract StarterPreSale is Ownable {
         if (!success) {
             revert failedToSendMoney();
         }
+
+        emit EthWithdrawn (msg.sender, balance);
     }
     
     function withdrawUSDC() public onlyOwner {
         uint256 amount = USDC.balanceOf(address(this));
         USDC.safeTransfer(msg.sender, amount);
+
+        emit UsdcWithdrawn (msg.sender, amount);
+
     }
 
          // WithdrawBTT Token 
