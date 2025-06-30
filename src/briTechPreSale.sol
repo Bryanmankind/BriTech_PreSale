@@ -71,8 +71,6 @@ contract BriTechLabsPreSale is Ownable {
         preSaleStartTime = block.timestamp;
         endpreSale = _endPreSale;
 
-        BTT.approve(address(this), type(uint256).max);
-
         priceFeed = AggregatorV3Interface(_priceFeed);
     }
 
