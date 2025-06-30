@@ -28,6 +28,7 @@ contract BriTechLabsPreSale is Ownable {
     error stalePrice();
     error OverflowDetected();
     error insurficientTokens();
+    error tokenSoldOut();
 
     // payment token to contract 
     IERC20 public USDC;
@@ -84,6 +85,10 @@ contract BriTechLabsPreSale is Ownable {
         return preSaleCost;
     }
 
+     function getPriceValue () public view returns (uint256) {
+        return _priceValue();
+    }
+
     // Extend the preSale Time 
     function extendPreSaleTime (uint256 _newDate) public onlyOwner {
         if (endpreSale > _newDate){
@@ -98,7 +103,7 @@ contract BriTechLabsPreSale is Ownable {
         emit preSaleEndTimeExtended(_newDate);
     }
     
-    // change the cost of the token~~
+    // change the cost of the token
     function setTokenCost (uint256 _price) external checkPrice(_price) onlyOwner {
         preSaleCost = _price;
         emit PriceUpdated(preSaleCost);
@@ -132,6 +137,10 @@ contract BriTechLabsPreSale is Ownable {
             revert preSaleIsOver();
         }
 
+        if (preSaleTokenSupply == soldTokens) {
+            revert tokenSoldOut(); 
+        }
+
         if (msg.value < minimumEth) {
             revert fundsTooLow();
         }
@@ -160,10 +169,6 @@ contract BriTechLabsPreSale is Ownable {
         return true;
     }
 
-    function getPriceValue () public view returns (uint256) {
-        return _priceValue();
-    }
-
    function _priceValue () internal view returns (uint256) {
     ( , int256 USDCFeedPrice, , uint256 updatedAt,) = priceFeed.latestRoundData();
 
@@ -172,15 +177,14 @@ contract BriTechLabsPreSale is Ownable {
     }
 
      if (updatedAt + 30 minutes < block.timestamp) {
-     revert stalePrice();
+        revert stalePrice();
     }
 
-    unchecked {
+     unchecked {
         uint256 price = uint256(USDCFeedPrice); 
         return price / 1e8;
+        }
     }
-}
-
 
     function _ethEquivalent(uint256 _usdcAmount) internal view returns  (uint256) {
 
@@ -205,6 +209,10 @@ contract BriTechLabsPreSale is Ownable {
 
         if (block.timestamp > endpreSale) {
              revert preSaleIsOver();
+        }
+
+        if (preSaleTokenSupply == soldTokens) {
+            revert tokenSoldOut(); 
         }
 
        uint256 ethEquivalent = _ethEquivalent(_usdcAmount);
