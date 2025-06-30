@@ -171,8 +171,8 @@ contract BriTechLabsPreSale is Ownable {
         revert invalidPrice();
     }
 
-    if (updatedAt < block.timestamp - 30 minutes) {
-        revert stalePrice();
+     if (updatedAt + 30 minutes < block.timestamp) {
+     revert stalePrice();
     }
 
     unchecked {
@@ -190,13 +190,12 @@ contract BriTechLabsPreSale is Ownable {
             revert invalidPrice();
        }
 
-         uint256 ethEquivalent;
-
+            uint256 ethEquivalent;
         unchecked {
             ethEquivalent = (_usdcAmount * 1e18) / price;
         }
+            return ethEquivalent;
 
-        return ethEquivalent;
     }
 
     function buyWithUSDC (uint256 _usdcAmount) internal  returns (bool) {
@@ -210,7 +209,7 @@ contract BriTechLabsPreSale is Ownable {
 
        uint256 ethEquivalent = _ethEquivalent(_usdcAmount);
 
-        if (ethEquivalent <= minimumEth) {
+        if (ethEquivalent < minimumEth) {
             revert fundsTooLow();
         }
 
@@ -235,7 +234,6 @@ contract BriTechLabsPreSale is Ownable {
     
         return true;   
     }
-
 
     // withDraw funds to owners Address.. 
     function withdrawEth() public onlyOwner {
