@@ -34,11 +34,9 @@ contract BriTechLabsPreSaleTest is Test {
 
 
         vm.startPrank(owner);
-        briTechLabsPreSale = new BriTechLabsPreSale( address(contractToken), address(paymentToken), endPreSale, preSaleCost, address(mock));
+        briTechLabsPreSale = new BriTechLabsPreSale( address(contractToken), address(paymentToken), endPreSale, preSaleCost, address(mock), 1_000_000 * 1e18);
         
         contractToken.approve(address(briTechLabsPreSale), 100_000 * 1e18);
-
-        briTechLabsPreSale.depositBTT(100_000 * 1e18);
 
         vm.stopPrank();
 

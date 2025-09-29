@@ -72,7 +72,7 @@ contract BriTechLabsPreSale is Ownable {
         endpreSale = _endPreSale;
         preSaleTokenSupply = _preSaleTokenSupply;
 
-        BTT.safeApprove(address(this), preSaleTokenSupply);
+        BTT.approve(address(this), preSaleTokenSupply);
         priceFeed = AggregatorV3Interface(_priceFeed);
     }
 
@@ -121,7 +121,7 @@ contract BriTechLabsPreSale is Ownable {
     }
 
     // function buy BTT with Eth
-    function buyToken() internal returns (bool) {
+    function buyToken() internal returns (uint256) {
 
         if (block.timestamp > endpreSale) {
             revert preSaleIsOver();
@@ -151,12 +151,11 @@ contract BriTechLabsPreSale is Ownable {
 
         emit BttTokenBought (msg.sender, token);
         
-        return true;
+        return token;
     }
 
-    function buyTokenWithUSDC (uint256 _usdcAmount) public returns (bool) {
+    function buyTokenWithUSDC (uint256 _usdcAmount) public {
         buyWithUSDC(_usdcAmount);
-        return true;
     }
 
    function _priceValue () internal view returns (uint256) {
@@ -192,7 +191,7 @@ contract BriTechLabsPreSale is Ownable {
 
     }
 
-    function buyWithUSDC (uint256 _usdcAmount) internal  returns (bool) {
+    function buyWithUSDC (uint256 _usdcAmount) internal  returns (uint256) {
         if (USDC.allowance(msg.sender, address(this)) < _usdcAmount) {
             revert invalidAmount();
         }
@@ -230,7 +229,7 @@ contract BriTechLabsPreSale is Ownable {
 
         emit BttTokenBought(msg.sender, token);
     
-        return true;   
+        return token;   
     }
 
     // withDraw funds to owners Address.. 
