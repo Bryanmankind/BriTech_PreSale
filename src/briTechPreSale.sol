@@ -245,8 +245,7 @@ contract BriTechLabsPreSale is Ownable {
     // withDraw funds to owners Address.. 
     function withdrawEth() public onlyOwner {
         uint256 balance = address(this).balance;
-        amountRaisedEth = 0;
-        (bool success,) = msg.sender.call{value: balance}("");
+        (bool success,) = payable(msg.sender).call{value: balance}("");
         if (!success) {
             revert failedToSendMoney();
         }

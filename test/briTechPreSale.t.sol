@@ -25,20 +25,22 @@ contract BriTechLabsPreSaleTest is Test {
         contractToken = new IERC20Mock("BriTech coin", "BTT", 18, 5_000_000, owner);
         mock = new MockAggregator(3_000 * 1e8, block.timestamp);
 
+        vm.prank(user1);
+        paymentToken.transfer(user2, 300 * 10**6);
+        vm.stopPrank();
+
        preSaleCost = 0.00025 ether;
 
         endPreSale = block.timestamp + 10 days;
 
         console.log("Owner BTT balance before approve:", contractToken.balanceOf(owner));
 
-
-
         vm.startPrank(owner);
         briTechLabsPreSale = new BriTechLabsPreSale( address(contractToken), address(paymentToken), endPreSale, preSaleCost, address(mock), 1_000_000 * 1e18);
         
-        contractToken.approve(address(briTechLabsPreSale), 300000*1e18);
+        contractToken.approve(address(briTechLabsPreSale), 1000000*1e18);
 
-        briTechLabsPreSale.depositBTT(300000*1e18);
+        briTechLabsPreSale.depositBTT(1000000*1e18);
 
         vm.stopPrank();
 
@@ -55,9 +57,8 @@ contract BriTechLabsPreSaleTest is Test {
 
     function test_SetNewDate () public {
         vm.startPrank(owner);
-        console.log("old date:.....", briTechLabsPreSale.endpreSale());
         briTechLabsPreSale.extendPreSaleTime(briTechLabsPreSale.endpreSale() + 30 days);
-        console.log("New date:.....", briTechLabsPreSale.endpreSale());
+        assertEq(briTechLabsPreSale.endpreSale(), endPreSale + 30 days);
         vm.stopPrank();
     }
 
@@ -94,10 +95,11 @@ contract BriTechLabsPreSaleTest is Test {
         console.log("contract eth balance after...", briTechLabsPreSale.amountRaisedEth());
 
         vm.assertEq(briTechLabsPreSale.amountRaisedEth(), 0.4 ether);
+        vm.assertEq(contractToken.balanceOf(user1), user1Tokens);
+        vm.assertEq(contractToken.balanceOf(user2), user2Tokens);
     }
 
     
-
     function test_endOfPreSale () public {
         vm.startPrank(user1);
         vm.warp(40 days);
@@ -111,34 +113,51 @@ contract BriTechLabsPreSaleTest is Test {
     }
 
 
-    function test_buyTokenWithUssdc () public {
+    function test_buyTokenWithUSDC () public {
         vm.startPrank(user1);
-        
-        console.log("contract balance of usdc before...", briTechLabsPreSale.USDCamountRaised());
-        console.log("contract balance of usdc before...", briTechLabsPreSale.USDCamountRaised());
-
-        paymentToken.approve(address(briTechLabsPreSale), 500*10**6);
-
-        briTechLabsPreSale.buyTokenWithUSDC(500*10**6);
-
-        console.log("contract balance of usdc after...", briTechLabsPreSale.USDCamountRaised());
-
+        paymentToken.approve(address(briTechLabsPreSale), 50*10**6);
+        uint256 user1token = briTechLabsPreSale.buyTokenWithUSDC(50*10**6);
+        console.log("user1 tokens bought...", user1token);
+        vm.stopPrank();
+        vm.startPrank(user2);
+        paymentToken.approve(address(briTechLabsPreSale), 50*10**6);
+        uint256 user2token = briTechLabsPreSale.buyTokenWithUSDC(50*10**6);
+        console.log("user2tokens bought...", user1token);
         vm.stopPrank();
 
-        vm.assertEq(briTechLabsPreSale.USDCamountRaised(), 500*10**6);
+        vm.assertEq(briTechLabsPreSale.USDCamountRaised(), 100*10**6);
+        vm.assertEq(contractToken.balanceOf(user1), user1token);
+        vm.assertEq(contractToken.balanceOf(user2), user2token);
     }
 
-    function test_WithdrawEth () public {
-        vm.prank(owner);
+    function test_WithdrawEth() public {
+        vm.deal(user2, 2 ether);
+        vm.startPrank(user2);
+        uint256 user2Tokens = briTechLabsPreSale.buyTokenWithEth{value: 0.2 ether}();
+        vm.stopPrank();
+
+        // balances before withdraw
+        uint256 ownerBalanceBefore = address(owner).balance;
+        uint256 contractBalanceBefore = address(briTechLabsPreSale).balance;
+
+        vm.startPrank(owner);
         briTechLabsPreSale.withdrawEth();
-        uint256 finalContractEthBalance = briTechLabsPreSale.amountRaisedEth();
-        vm.assertEq(finalContractEthBalance, 0);
+        vm.stopPrank();
+
+        assertEq(address(briTechLabsPreSale).balance, 0);
+
+        uint256 ownerBalanceAfter = address(owner).balance;
+        assertEq(ownerBalanceAfter, ownerBalanceBefore + contractBalanceBefore);
     }
 
-    function test_WithDrawUssdc () public {
-        vm.prank(owner);
+    
+    function test_WithdrawUsdc () public {
+        vm.startPrank(user1);
+        paymentToken.approve(address(briTechLabsPreSale), 50*10**6);
+        uint256 user1token = briTechLabsPreSale.buyTokenWithUSDC(50*10**6);
+        vm.stopPrank();
+        vm.startPrank(owner);
         briTechLabsPreSale.withdrawUSDC();
-        uint256 finalContractUSDCBalance = briTechLabsPreSale.USDCamountRaised();
-        vm.assertEq(finalContractUSDCBalance, 0);
+        vm.assertEq(paymentToken.balanceOf(address(owner)), 50*10**6);
     }
 }
