@@ -36,7 +36,9 @@ contract BriTechLabsPreSaleTest is Test {
         vm.startPrank(owner);
         briTechLabsPreSale = new BriTechLabsPreSale( address(contractToken), address(paymentToken), endPreSale, preSaleCost, address(mock), 1_000_000 * 1e18);
         
-        contractToken.approve(address(briTechLabsPreSale), 100_000 * 1e18);
+        contractToken.approve(address(briTechLabsPreSale), 300000*1e18);
+
+        briTechLabsPreSale.depositBTT(300000*1e18);
 
         vm.stopPrank();
 
@@ -74,18 +76,24 @@ contract BriTechLabsPreSaleTest is Test {
     function test_buyTokenWithEth () public {
         
         vm.deal(user1, 2 ether);
+        vm.deal(user2, 2 ether);
         console.log("contract eth balance before...", briTechLabsPreSale.amountRaisedEth());
-        console.log("user Btt balance before...", contractToken.balanceOf(user1));
 
         vm.startPrank(user1);
-        briTechLabsPreSale.buyTokenWithEth{value: 0.2 ether}();
+        uint256 user1Tokens = briTechLabsPreSale.buyTokenWithEth{value: 0.2 ether}();
 
-        console.log("contract eth balance after...", briTechLabsPreSale.amountRaisedEth());
-        console.log("user Btt balance after...", contractToken.balanceOf(user1));
-
+        console.log("user1 tokens bought...", user1Tokens);
         vm.stopPrank();
 
-        vm.assertEq(briTechLabsPreSale.amountRaisedEth(), 0.2 ether);
+        vm.startPrank(user2);
+        uint256 user2Tokens = briTechLabsPreSale.buyTokenWithEth{value: 0.2 ether}();
+
+        console.log("user2 tokens bought...", user2Tokens);
+        vm.stopPrank();
+
+        console.log("contract eth balance after...", briTechLabsPreSale.amountRaisedEth());
+
+        vm.assertEq(briTechLabsPreSale.amountRaisedEth(), 0.4 ether);
     }
 
     

@@ -71,8 +71,7 @@ contract BriTechLabsPreSale is Ownable {
         preSaleStartTime = block.timestamp;
         endpreSale = _endPreSale;
         preSaleTokenSupply = _preSaleTokenSupply;
-
-        BTT.approve(address(this), preSaleTokenSupply);
+        
         priceFeed = AggregatorV3Interface(_priceFeed);
     }
 
@@ -115,9 +114,19 @@ contract BriTechLabsPreSale is Ownable {
         emit PriceUpdated(minimumEth);
     }
 
-    function buyTokenWithEth () public payable returns (bool) {
-        buyToken();
-        return true; 
+    // function deposit BTT to contract
+    function depositBTT(uint256 _tokens) external onlyOwner {
+    require(BTT.transferFrom(msg.sender, address(this), _tokens), "Transfer failed");
+
+        preSaleTokenSupply += _tokens;
+
+        emit bttTokenDeposited (_tokens);
+    }
+
+
+    function buyTokenWithEth () public payable returns (uint256) {
+        return buyToken();
+        
     }
 
     // function buy BTT with Eth
@@ -154,8 +163,9 @@ contract BriTechLabsPreSale is Ownable {
         return token;
     }
 
-    function buyTokenWithUSDC (uint256 _usdcAmount) public {
-        buyWithUSDC(_usdcAmount);
+    function buyTokenWithUSDC (uint256 _usdcAmount) public returns (uint256) {
+        return buyWithUSDC(_usdcAmount);
+        
     }
 
    function _priceValue () internal view returns (uint256) {
