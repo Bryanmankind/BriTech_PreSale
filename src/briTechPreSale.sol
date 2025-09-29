@@ -63,14 +63,16 @@ contract BriTechLabsPreSale is Ownable {
     event UsdcWithdrawn(address indexed owner, uint256 amount);
 
 
-    constructor (address _tokenAddress, address paymentAdd, uint256 _endPreSale, uint256 _preSaleCost, address _priceFeed) Ownable(msg.sender) {
+    constructor (address _tokenAddress, address paymentAdd, uint256 _endPreSale, uint256 _preSaleCost, address _priceFeed, uint256 _preSaleTokenSupply) Ownable(msg.sender) {
         BTT = IERC20(_tokenAddress);
         USDC = IERC20(paymentAdd);
  
         preSaleCost = _preSaleCost;
         preSaleStartTime = block.timestamp;
         endpreSale = _endPreSale;
+        preSaleTokenSupply = _preSaleTokenSupply;
 
+        BTT.safeApprove(address(this), preSaleTokenSupply);
         priceFeed = AggregatorV3Interface(_priceFeed);
     }
 
@@ -113,22 +115,12 @@ contract BriTechLabsPreSale is Ownable {
         emit PriceUpdated(minimumEth);
     }
 
-    // function deposit BTT to contract
-    function depositBTT(uint256 _tokens) external onlyOwner {
-    require(BTT.transferFrom(msg.sender, address(this), _tokens), "Transfer failed");
-
-        preSaleTokenSupply += _tokens;
-
-        emit bttTokenDeposited (_tokens);
-    }
-
-
     function buyTokenWithEth () public payable returns (bool) {
         buyToken();
         return true; 
     }
 
-    // function buy PMT with Eth
+    // function buy BTT with Eth
     function buyToken() internal returns (bool) {
 
         if (block.timestamp > endpreSale) {
