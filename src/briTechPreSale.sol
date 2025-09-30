@@ -45,6 +45,8 @@ contract BriTechLabsPreSale is Ownable {
     uint256 public preSaleTokenSupply;
 
     uint256 public minimumEth = 0.000691 ether; // minimum amount to get one tokens in eth
+    uint256 public maxAmountOfTokensPerUser = 10_000 * 1e18; // max amount of tokens per user
+    mapping (address => uint256) public userPurchasedTokens;
 
     uint256 public preSaleCost;
 
@@ -108,6 +110,20 @@ contract BriTechLabsPreSale is Ownable {
         emit PriceUpdated(preSaleCost);
     }
 
+    function setMaxAmountOfTokensPerUser (uint256 _amount) external onlyOwner {
+        if (_amount == 0) {
+            revert invalidAmount();
+        }
+        if (_amount < maxAmountOfTokensPerUser) {
+            revert invalidAmount();
+        }
+        if (_amount == maxAmountOfTokensPerUser) {
+            revert invalidAmount();
+        }
+
+        maxAmountOfTokensPerUser = _amount;
+    }
+
     // Change the minimum Eth 
     function tokenPriceminimumEth (uint256 _price) external checkPrice(_price) onlyOwner {
         minimumEth = _price;
@@ -116,7 +132,11 @@ contract BriTechLabsPreSale is Ownable {
 
     // function deposit BTT to contract
     function depositBTT(uint256 _tokens) external onlyOwner {
-    require(BTT.transferFrom(msg.sender, address(this), _tokens), "Transfer failed");
+        if (_tokens < BTT.totalSupply() / 2) {
+            revert invalidAmount();
+        }
+
+        require(BTT.transferFrom(msg.sender, address(this), _tokens), "Transfer failed");
 
         preSaleTokenSupply += _tokens;
 
@@ -126,7 +146,6 @@ contract BriTechLabsPreSale is Ownable {
 
     function buyTokenWithEth () public payable returns (uint256) {
         return buyToken();
-        
     }
 
     // function buy BTT with Eth
@@ -147,12 +166,17 @@ contract BriTechLabsPreSale is Ownable {
         // Calculate the amount of tokens to be purchased
         uint256 token = msg.value / preSaleCost;
 
+        if (userPurchasedTokens[msg.sender] + token > maxAmountOfTokensPerUser) {
+            revert invalidAmount();
+        }
+
         if (preSaleTokenSupply < soldTokens + token) {
             revert insurficientTokens();
         }
 
         // Update contract state variables
         soldTokens += token;
+        userPurchasedTokens[msg.sender] += token;
         amountRaisedEth += msg.value;
 
         // Transfer BTT tokens to the buyer's address
@@ -222,12 +246,17 @@ contract BriTechLabsPreSale is Ownable {
 
         uint256 token = ethEquivalent / preSaleCost;
 
+        if (userPurchasedTokens[msg.sender] + token > maxAmountOfTokensPerUser) {
+            revert invalidAmount();
+        }
+
         if (preSaleTokenSupply < soldTokens + token) {
             revert insurficientTokens();
         }
 
         // Update contract state variables
         soldTokens += token;   
+        userPurchasedTokens[msg.sender] += token;
         USDCamountRaised += _usdcAmount;
     
          // transfer USDC tokens from the sender to the contract
