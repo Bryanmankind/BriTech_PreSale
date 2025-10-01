@@ -1,6 +1,8 @@
 testMode: assertion
 coverage: true
 estimateGas: true
+slither: true
+
 
 compiler: solc
 solcVersion: 0.8.24
